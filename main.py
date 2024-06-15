@@ -2,10 +2,6 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
 import openai
 import os
-from dotenv import load_dotenv
-
-# Загрузка переменных окружения из .env файла
-load_dotenv()
 
 # Инициализация OpenAI API
 openai.api_key = os.getenv('OPENAI_API_KEY')
