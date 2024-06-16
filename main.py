@@ -47,7 +47,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         zodiac = user_data["zodiac"]
         question = user_data["question"]
 
-        response = openai.ChatCompletion.create(
+        response = openai.Chat.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
