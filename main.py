@@ -52,16 +52,15 @@ def handle_message(update: Update, context: CallbackContext) -> None:
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Создай таро-расклад для пользователя с именем {name}, датой рождения {dob}, знаком зодиака {zodiac}. Вопрос: {question}"}
-            ],
-            max_tokens=150
+            ]
         )
-        result = response['choices'][0]['message']['content']
+        result = response.choices[0].message['content']
         update.message.reply_text(result)
         del context.user_data[user_id]
 
 def main():
     telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-    updater = Updater(telegram_bot_token)
+    updater = Updater(telegram_bot_token, use_context=True)
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
