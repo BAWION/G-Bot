@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
-import openai
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Инициализация OpenAI API
-openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
@@ -26,10 +26,8 @@ def button(update: Update, context: CallbackContext) -> None:
 def handle_message(update: Update, context: CallbackContext) -> None:
     user_input = update.message.text
     user_id = update.message.from_user.id
-
     if user_id not in context.user_data:
         context.user_data[user_id] = {}
-
     if "name" not in context.user_data[user_id]:
         context.user_data[user_id]["name"] = user_input
         update.message.reply_text('Введите вашу дату рождения (ДД-ММ-ГГГГ)')
@@ -46,26 +44,26 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         dob = user_data["dob"]
         zodiac = user_data["zodiac"]
         question = user_data["question"]
-
-        response = openai.ChatCompletion.create(
+        
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Создай таро-расклад для пользователя с именем {name}, датой рождения {dob}, знаком зодиака {zodiac}. Вопрос: {question}"}
             ]
         )
-        result = response['choices'][0]['message']['content']
+        result = response.choices[0].message.content
         update.message.reply_text(result)
         del context.user_data[user_id]
 
 def main():
     telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
     updater = Updater(telegram_bot_token, use_context=True)
-    dispatcher = updater.dispatcher
+    dp = updater.dispatcher
 
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CallbackQueryHandler(button))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CallbackQueryHandler(button))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
     updater.start_polling()
     updater.idle()
