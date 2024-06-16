@@ -55,7 +55,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
             ],
             max_tokens=150
         )
-        result = response.choices[0].message['content']
+        result = response['choices'][0]['message']['content']
         update.message.reply_text(result)
         del context.user_data[user_id]
 
@@ -73,4 +73,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
