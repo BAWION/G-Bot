@@ -1,14 +1,55 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
-from openai import OpenAI
+import openai
 import os
+import requests
 from dotenv import load_dotenv
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
 
 # Инициализация OpenAI API
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Функция для создания видео с помощью HeyGen
+def create_video_with_heygen(text):
+    heygen_api_url = "https://api.heygen.com/v2/video/generate"
+    heygen_api_key = os.getenv('HEYGEN_API_KEY')
+
+    data = {
+        'video_inputs': [
+            {
+                'character': {
+                    'type': 'avatar',
+                    'avatar_id': 'your_avatar_id',  # Замените на ваш avatar_id
+                    'avatar_style': 'normal'
+                },
+                'voice': {
+                    'type': 'text',
+                    'input_text': text,
+                    'voice_id': 'your_voice_id',  # Замените на ваш voice_id
+                    'speed': 1.0
+                }
+            }
+        ],
+        'test': True,
+        'aspect_ratio': '16:9'
+    }
+
+    headers = {
+        "Authorization": f"Bearer {heygen_api_key}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(heygen_api_url, json=data, headers=headers)
+    response_data = response.json()
+
+    if response.status_code == 200 and "video_id" in response_data['data']:
+        video_id = response_data['data']['video_id']
+        return video_id
+    else:
+        print(f"Error creating video: {response_data}")
+        return None
 
 def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
@@ -45,7 +86,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         zodiac = user_data["zodiac"]
         question = user_data["question"]
         
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -53,7 +94,15 @@ def handle_message(update: Update, context: CallbackContext) -> None:
             ]
         )
         result = response.choices[0].message.content
-        update.message.reply_text(result)
+
+        # Создаем видео с помощью HeyGen
+        video_id = create_video_with_heygen(result)
+        if video_id:
+            video_url = f'https://api.heygen.com/v2/video/{video_id}'  # Пример URL для доступа к видео
+            update.message.reply_text(f'Ваше видео готово: {video_url}')
+        else:
+            update.message.reply_text('К сожалению, не удалось создать видео.')
+
         del context.user_data[user_id]
 
 def main():
