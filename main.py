@@ -50,12 +50,12 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a tarot reading bot."},
+                {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Создай таро-расклад для пользователя с именем {name}, датой рождения {dob}, знаком зодиака {zodiac}. Вопрос: {question}"}
             ],
             max_tokens=150
         )
-        result = response['choices'][0]['message']['content'].strip()
+        result = response['choices'][0]['message']['content']
         update.message.reply_text(result)
         del context.user_data[user_id]
 
