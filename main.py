@@ -47,14 +47,14 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         zodiac = user_data["zodiac"]
         question = user_data["question"]
 
-        response = openai.Chat.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Создай таро-расклад для пользователя с именем {name}, датой рождения {dob}, знаком зодиака {zodiac}. Вопрос: {question}"}
             ]
         )
-        result = response.choices[0].message['content']
+        result = response['choices'][0]['message']['content']
         update.message.reply_text(result)
         del context.user_data[user_id]
 
